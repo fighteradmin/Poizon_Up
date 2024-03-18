@@ -25,7 +25,7 @@ bot = Bot(token=os.getenv('TOKEN'))
 async def start_cmd(message: types.Message):
     await bot.send_sticker(message.from_user.id,
                            sticker="CAACAgIAAxkBAAEEIwABZfh-ObKLuCOIyzpVK4MdHVw-c90AAqYAA1KJkSNruSoQjbfHvDQE",  reply_markup=get_keyboard(
-            "Меню",
+            "Ассортимент",
             "О магазине",
             placeholder="Что вас интересует?",
             sizes=(1, 1)
