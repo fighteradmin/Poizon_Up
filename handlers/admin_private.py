@@ -42,7 +42,7 @@ async def admin_features(message: types.Message):
 async def admin_features(message: types.Message, session: AsyncSession):
     categories = await orm_get_categories(session)
     btns = {category.name : f'category_{category.id}' for category in categories}
-    await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns))
+    await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns), parse_mode="HTML")
 
 
 @admin_router.callback_query(F.data.startswith('category_'))
@@ -52,7 +52,7 @@ async def starring_at_product(callback: types.CallbackQuery, session: AsyncSessi
         await callback.message.answer_photo(
             product.image,
             caption=f"<strong>{product.name}\
-                    </strong>\n{product.description}\nСтоимость: {round(product.price, 2)}",
+                    </strong>\n{product.description}\nСтоимость: {round(product.price, 2)}", parse_mode="HTML",
             reply_markup=get_callback_btns(
                 btns={
                     "Удалить": f"delete_{product.id}",
@@ -63,6 +63,7 @@ async def starring_at_product(callback: types.CallbackQuery, session: AsyncSessi
         )
     await callback.answer()
     await callback.message.answer("ОК, вот список товаров ⏫")
+
 
 
 @admin_router.callback_query(F.data.startswith("delete_"))
@@ -256,7 +257,7 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
     elif message.photo:
         await state.update_data(image=message.photo[-1].file_id)
     else:
-        await message.answer("Отправьте фото пищи")
+        await message.answer("Отправьте фото товара")
         return
     data = await state.get_data()
     try:
@@ -279,4 +280,4 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
 # Ловим все прочее некорректное поведение для этого состояния
 @admin_router.message(AddProduct.image)
 async def add_image2(message: types.Message, state: FSMContext):
-    await message.answer("Отправьте фото пищи")
+    await message.answer("Отправьте фото товара")

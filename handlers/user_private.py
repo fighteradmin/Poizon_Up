@@ -11,11 +11,11 @@ from aiogram.utils.formatting import (
 )  # Italic, as_numbered_list и тд
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_get_products
+from database.orm_query import orm_get_products, orm_get_categories
 from filters.chat_types import ChatTypeFilter
 
 from kbds.reply import get_keyboard
-from kbds.inline import get_url_btns, get_inlineMix_btns, start_kb, support
+from kbds.inline import get_url_btns, get_inlineMix_btns, start_kb, support, get_callback_btns, user_product, prof_back
 
 user_private_router = Router()
 user_private_router.message.filter(ChatTypeFilter(["private"]))
@@ -25,30 +25,33 @@ bot = Bot(token=os.getenv('TOKEN'))
 async def start_cmd(message: types.Message):
     await bot.send_sticker(message.from_user.id,
                            sticker="CAACAgIAAxkBAAEEIwABZfh-ObKLuCOIyzpVK4MdHVw-c90AAqYAA1KJkSNruSoQjbfHvDQE",  reply_markup=get_keyboard(
-            "Ассортимент",
             "О магазине",
-            placeholder="Что вас интересует?",
+            placeholder="Нажмите кнопку",
             sizes=(1, 1)
         ),)
     await message.answer(f"<em>Здравствуйте, <b>{message.from_user.full_name}</b>! Я бот магазина FF Poizon. Я могу прислать подробные фото "
         f"о каждом товаре. Для этого выберите кнопкой ниже нужную категорию "
         f"и там найдите интересующий товар. Я скину всю информацию, которая у меня есть</em>", parse_mode="HTML")
-    await message.answer_photo(photo="AgACAgIAAxkBAAP1ZfiCEEtdlVDwyHLDARPe8Mm4OqsAAqzXMRtn68lL27q7dPyIc58BAAMCAAN5AAM0BA",
+    await message.answer_photo(photo="AgACAgIAAxkBAAMKZfnUCkMyCun-u7I8I5C1sSH3th8AAqzXMRtn68lLhKA_z-tJVm8BAAMCAAN5AAM0BA",
                                caption="<em>Выберите нужную категорию</em>"
-        , parse_mode="HTML",
-                               reply_markup=start_kb)
+        , parse_mode="HTML", reply_markup=start_kb)
 
 
+@user_private_router.callback_query(F.data.startswith('category_s'))
+async def products_menu(callback: types.CallbackQuery, session: AsyncSession):
+    await callback.answer('')
+    category_id = callback.data.split('_s')[-1]
+    for product in await orm_get_products(session, int(category_id)):
+        await callback.message.answer_photo(
+            product.image,
+            caption=f"<strong>{product.name}\
+                    </strong>\n{product.description}\nСтоимость: {round(product.price, 2)}", parse_mode="HTML", reply_markup=user_product)
 # @user_private_router.message(F.text.lower() == "меню")
 @user_private_router.message(or_f(Command("menu"), (F.text.lower() == "меню")))
 async def menu_cmd(message: types.Message, session: AsyncSession):
-    for product in await orm_get_products(session):
-        await message.answer_photo(
-            product.image,
-            caption=f"<strong>{product.name}\
-                    </strong>\n{product.description}\nСтоимость: {round(product.price, 2)}", parse_mode="HTML"
-        )
-    await message.answer("Вот меню:")
+    categories = await orm_get_categories(session)
+    btns = {category.name: f'category_s{category.id}' for category in categories}
+    await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns), parse_mode="HTML")
 
 
 @user_private_router.message(F.text.lower() == "о магазине")
@@ -59,37 +62,50 @@ async def about_cmd(message: types.Message):
 @user_private_router.callback_query(F.data == 'catalog')
 async def catalog(callback: CallbackQuery, session: AsyncSession):
     await callback.answer('Вы выбрали каталог')
-    for product in await orm_get_products(session):
-        await callback.message.answer_photo(
-            product.image,
-            caption=f"<strong>{product.name}\
-                    </strong>\n{product.description}\nСтоимость: {round(product.price, 2)}", parse_mode="HTML")
-    return menu_cmd
+    categories = await orm_get_categories(session)
+    btns = {category.name: f'category_s{category.id}' for category in categories}
+    await callback.message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns), parse_mode="HTML")
 
+@user_private_router.callback_query(F.data == 'profile')
+async def profile(callback: CallbackQuery):
+    await callback.answer('')
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANRZfno9HpWZXXFR7mD3xnbckIAAVeFAAKP2zEb91HQS0TEs73yiKJrAQADAgADeQADNAQ",
+                                              caption=f"<b>Ваш ID:</b> <code>{callback.message.from_user.id}</code>\n\n"
+                                                      f"<b>Кол-во заказов:</b> <code>0</code>\n\n"
+                                                      f"<b>Скидка:</b> <code>0%</code>", parse_mode="HTML", reply_markup=prof_back)
 @user_private_router.callback_query(F.data == 'help')
-async def catalog(callback: CallbackQuery):
+async def help(callback: CallbackQuery):
     await callback.answer('Помощь/Сотрудничество🫱🏻‍🫲🏻')
-    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBD2X4j-bZLgcuya9mnFegClruQuHkAAIM2DEbZ-vJSwj6qPjTUtE6AQADAgADeQADNAQ",
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAMLZfnUCuT5-qgUUc02rPpQJUdwQRcAAgzYMRtn68lLoMfhECcV4Z8BAAMCAAN5AAM0BA",
                                         caption="<b>По вопросам/Сотрудничеству</b>⬇️",
                                         parse_mode="HTML",
                                         reply_markup=support)
 
     return menu_cmd
 
-# @user_private_router.message(F.photo)
-# async def photo(message: types.Message):
-#     photo_data = message.photo[-1]
-#
-#     await message.answer(f'{photo_data}')
+
+@user_private_router.callback_query(F.data == 'back')
+async def back(callback: CallbackQuery):
+    await callback.answer('')
+    await callback.message.answer_photo(
+        photo="AgACAgIAAxkBAAMKZfnUCkMyCun-u7I8I5C1sSH3th8AAqzXMRtn68lLhKA_z-tJVm8BAAMCAAN5AAM0BA",
+        caption="<em>Выберите нужную категорию</em>"
+        , parse_mode="HTML",
+        reply_markup=start_kb)
 
 
-# @user_private_router.message(F.contact)
-# async def get_contact(message: types.Message):
-#     await message.answer(f"номер получен")
-#     await message.answer(str(message.contact))
+@user_private_router.message(F.text == 'Меню')
+async def admin_features(message: types.Message, session: AsyncSession):
+    categories = await orm_get_categories(session)
+    btns = {category.name : f'category_s{category.id}' for category in categories}
+    await message.answer("Выберите категорию", reply_markup=get_callback_btns(btns=btns), parse_mode="HTML")
 
 
-# @user_private_router.message(F.location)
-# async def get_location(message: types.Message):
-#     await message.answer(f"локация получена")
-#     await message.answer(str(message.location))
+
+@user_private_router.message(F.photo)
+async def photo(message: types.Message):
+    photo_data = message.photo[-1]
+
+    await message.answer(f'{photo_data}')
+
+

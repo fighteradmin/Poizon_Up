@@ -45,14 +45,20 @@ def get_inlineMix_btns(
 start_kb = InlineKeyboardMarkup(
     inline_keyboard=[
         [
-            InlineKeyboardButton(text="Отзывы💕", url="https://t.me/ff_poizon_otzivi")
+            InlineKeyboardButton(text="Товары🗓", callback_data="catalog")
         ],
+{
+            InlineKeyboardButton(text="Профиль💠", callback_data="profile")
+        },
         {
             InlineKeyboardButton(text="Помощь🔒", callback_data="help")
         },
         {
-            InlineKeyboardButton(text="Товары🗓", callback_data="catalog")
-        }
+            InlineKeyboardButton(text="Отзывы🔰", url="https://t.me/ff_poizon_otzivi")
+        },
+        {
+            InlineKeyboardButton(text="Канал💕", url="https://t.me/ff_poizon")
+        },
     ],
 )
 
@@ -64,5 +70,27 @@ support = InlineKeyboardMarkup(
         {
             InlineKeyboardButton(text="Сотрудничество👋🏻", url="https://t.me/nastyalovekl")
         },
+        {
+            InlineKeyboardButton(text="Назад🔙", callback_data="back")
+        }
     ],
+)
+
+user_product = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="Заказать⚜️", url="https://t.me/official_supp_t")
+        ],
+        {
+            InlineKeyboardButton(text="Главная панель⏏️", callback_data="back")
+        }
+    ],
+)
+
+prof_back = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="Назад🔙", callback_data="back")
+        ]
+    ]
 )
