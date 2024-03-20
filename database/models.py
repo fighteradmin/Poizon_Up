@@ -27,3 +27,9 @@ class Product(Base):
     category_id: Mapped[int] = mapped_column(ForeignKey('category.id', ondelete='CASCADE'), nullable=False)
 
     category: Mapped['Category'] = relationship(backref='product')
+
+class Registration(Base):
+    __tablename__ = 'registration'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(150), nullable=False)

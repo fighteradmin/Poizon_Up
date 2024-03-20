@@ -27,7 +27,6 @@ admin_router.message.filter(ChatTypeFilter(["private"]), IsAdmin())
 ADMIN_KB = get_keyboard(
     "Добавить товар",
     "Ассортимент",
-    "Добавить/Изменить баннер",
     placeholder="Выберите действие",
     sizes=(2,),
 )
@@ -52,7 +51,7 @@ async def starring_at_product(callback: types.CallbackQuery, session: AsyncSessi
         await callback.message.answer_photo(
             product.image,
             caption=f"<strong>{product.name}\
-                    </strong>\n{product.description}\nСтоимость: {round(product.price, 2)}", parse_mode="HTML",
+                    </strong>\n{product.description}\nСтоимость: {round(product.price, 2)} ₽", parse_mode="HTML",
             reply_markup=get_callback_btns(
                 btns={
                     "Удалить": f"delete_{product.id}",

@@ -83,14 +83,43 @@ user_product = InlineKeyboardMarkup(
         ],
         {
             InlineKeyboardButton(text="Главная панель⏏️", callback_data="back")
-        }
+        },
+
     ],
 )
 
 prof_back = InlineKeyboardMarkup(
     inline_keyboard=[
         [
+            InlineKeyboardButton(text="Защита данных🔹", callback_data="register")
+        ],
+        {
             InlineKeyboardButton(text="Назад🔙", callback_data="back")
-        ]
+        }
     ]
+)
+
+prof_back_not_reg = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="Назад🔙", callback_data="back")
+        ],
+    ]
+)
+
+
+generate_password = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="Сгенирировать ключ⚡️", callback_data="gener_pass")
+        ],
+    ],
+)
+
+continue_reg = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="Продолжить💫", callback_data="skip")
+        ],
+    ],
 )
